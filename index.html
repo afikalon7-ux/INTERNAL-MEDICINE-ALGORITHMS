@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Internal Medicine Algorithms</title>
+<style>
+:root {
+  --sidebar-bg: #1a2035;
+  --sidebar-hover: #2a3555;
+  --sidebar-active: #4E9DA0;
+  --accent: #4E9DA0;
+  --bg: #f0f2f5;
+  --card-bg: #ffffff;
+  --text: #2c3e50;
+  --text-muted: #7f8c8d;
+  --border: #e0e0e0;
+  --diagnosis: #FFD966;
+  --urgent: #E05252;
+  --treatment: #7BAF7B;
+  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --sidebar-width: 220px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+/* SIDEBAR */
+#sidebar {
+  width: var(--sidebar-width);
+  background: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+#sidebar-logo {
+  padding: 20px 16px 12px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+#sidebar-logo span { color: var(--accent); font-size: 18px; }
+.specialty-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  cursor: pointer;
+  color: rgba(255,255,255,0.75);
+  font-size: 13.5px;
+  transition: background 0.15s, color 0.15s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.specialty-btn:hover { background: var(--sidebar-hover); color: #fff; }
+.specialty-btn.active { background: var(--sidebar-active); color: #fff; }
+.specialty-btn .icon { font-size: 16px; width: 22px; text-align: center; }
+.specialty-btn .count { margin-left: auto; background: rgba(255,255,255,0.15); border-radius: 10px; padding: 1px 7px; font-size: 11px; }
+.specialty-btn.active .count { background: rgba(255,255,255,0.3); }
+
+/* MAIN */
+#main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+#topbar {
+  background: #fff;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  flex-shrink: 0;
+}
+#topbar h1 { font-size: 16px; font-weight: 700; color: var(--text); flex: 1; }
+#search-box {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 13px;
+  width: 260px;
+  outline: none;
+  background: var(--bg);
+}
+#search-box:focus { border-color: var(--accent); }
+#content-area { flex: 1; overflow-y: auto; padding: 24px; }
+#algo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.algo-card {
+  background: var(--card-bg);
+  border-radius: 10px;
+  padding: 18px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  transition: transform 0.15s, box-shadow 0.15s;
+  border-left: 4px solid var(--accent);
+}
+.algo-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+.algo-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 6px; line-height: 1.4; }
+.algo-card p { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+.algo-card .card-tags { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px; }
+.tag { background: rgba(78,157,160,0.1); color: var(--accent); border-radius: 4px; padding: 2px 7px; font-size: 11px; }
+.card-citation { margin-top: 8px; font-size: 11px; color: var(--text-muted); font-style: italic; }
+
+/* MODAL */
+#modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+#modal-overlay.open { display: flex; }
+#modal {
+  background: #fff;
+  border-radius: 12px;
+  width: 92vw;
+  max-width: 1100px;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+#modal-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+#modal-title { font-size: 18px; font-weight: 700; flex: 1; }
+#modal-specialty-badge {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+#modal-close {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#modal-close:hover { background: #eee; }
+#modal-body { flex: 1; display: flex; overflow: hidden; }
+#diagram-area {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background: #fafafa;
+}
+#diagram-area svg { min-width: 600px; width: 100%; height: auto; font-size: 14px; }
+#info-panel {
+  width: 300px;
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 20px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.info-section h4 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 8px; }
+.info-section p { font-size: 13px; line-height: 1.6; color: var(--text); }
+.citation-box {
+  background: rgba(78,157,160,0.08);
+  border-left: 3px solid var(--accent);
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.footnote { margin-bottom: 8px; font-size: 12.5px; line-height: 1.6; }
+.footnote sup { color: var(--accent); font-weight: 700; margin-right: 4px; }
+.legend-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; }
+.legend-dot { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+
+#modal-footer {
+  padding: 12px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.btn {
+  padding: 8px 18px;
+  border-radius: 6px;
+  border: none;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #3d8285; }
+.btn-secondary { background: var(--bg); border: 1px solid var(--border); color: var(--text); }
+.btn-secondary:hover { background: #e5e7ea; }
+
+#loading {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 40px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.spinner {
+  width: 24px; height: 24px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 10px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+#empty-state .big-icon { font-size: 48px; margin-bottom: 12px; }
+
+@media print {
+  #sidebar, #topbar, #modal-footer, #info-panel { display: none !important; }
+  #modal { width: 100%; height: 100%; box-shadow: none; }
+  #diagram-area { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<nav id="sidebar">
+  <div id="sidebar-logo"><span>⚕</span> IM Algorithms</div>
+  <button class="specialty-btn active" data-specialty="all"><span class="icon">🏠</span> All Algorithms <span class="count" id="count-all">0</span></button>
+  <button class="specialty-btn" data-specialty="cardiology"><span class="icon">❤️</span> Cardiology <span class="count" id="count-cardiology">0</span></button>
+  <button class="specialty-btn" data-specialty="gastroenterology"><span class="icon">🫀</span> Gastroenterology <span class="count" id="count-gastroenterology">0</span></button>
+  <button class="specialty-btn" data-specialty="nephrology"><span class="icon">🫘</span> Nephrology <span class="count" id="count-nephrology">0</span></button>
+  <button class="specialty-btn" data-specialty="endocrinology"><span class="icon">🩺</span> Endocrinology <span class="count" id="count-endocrinology">0</span></button>
+  <button class="specialty-btn" data-specialty="hematology"><span class="icon">🩸</span> Hematology <span class="count" id="count-hematology">0</span></button>
+  <button class="specialty-btn" data-specialty="infectious"><span class="icon">🦠</span> Infectious Diseases <span class="count" id="count-infectious">0</span></button>
+  <button class="specialty-btn" data-specialty="rheumatology"><span class="icon">🦴</span> Rheumatology <span class="count" id="count-rheumatology">0</span></button>
+  <button class="specialty-btn" data-specialty="pulmonology"><span class="icon">🫁</span> Pulmonology <span class="count" id="count-pulmonology">0</span></button>
+  <button class="specialty-btn" data-specialty="criticalcare"><span class="icon">🏥</span> Critical Care <span class="count" id="count-criticalcare">0</span></button>
+</nav>
+
+<div id="main">
+  <div id="topbar">
+    <h1 id="topbar-title">All Algorithms</h1>
+    <input id="search-box" type="text" placeholder="🔍  Search algorithms..." />
+  </div>
+  <div id="content-area">
+    <div id="algo-grid"></div>
+    <div id="empty-state" style="display:none">
+      <div class="big-icon">🔬</div>
+      <p>No algorithms found</p>
+    </div>
+  </div>
+</div>
+
+<div id="modal-overlay">
+  <div id="modal">
+    <div id="modal-header">
+      <div id="modal-title">Algorithm</div>
+      <div id="modal-specialty-badge"></div>
+      <button id="modal-close">✕</button>
+    </div>
+    <div id="modal-body">
+      <div id="diagram-area">
+        <div id="loading"><div class="spinner"></div> Rendering diagram...</div>
+        <div id="diagram-container"></div>
+      </div>
+      <div id="info-panel">
+        <div class="info-section">
+          <h4>Legend</h4>
+          <div class="legend-row"><div class="legend-dot" style="background:#4E9DA0"></div> Decision / Process Step</div>
+          <div class="legend-row"><div class="legend-dot" style="background:#FFD966;border:1px solid #B8960C"></div> Diagnosis</div>
+          <div class="legend-row"><div class="legend-dot" style="background:#E05252"></div> Urgent Action</div>
+          <div class="legend-row"><div class="legend-dot" style="background:#7BAF7B"></div> Treatment</div>
+          <div class="legend-row"><div class="legend-dot" style="background:#546E7A"></div> Start Point</div>
+        </div>
+        <div class="info-section">
+          <h4>Summary</h4>
+          <p id="modal-summary"></p>
+        </div>
+        <div class="info-section">
+          <h4>Harrison's Citation</h4>
+          <div class="citation-box" id="modal-citation"></div>
+        </div>
+        <div class="info-section" id="footnotes-section">
+          <h4>Footnotes</h4>
+          <div id="modal-footnotes"></div>
+        </div>
+        <div class="info-section">
+          <h4>Notes</h4>
+          <textarea id="modal-notes" style="width:100%;height:80px;border:1px solid var(--border);border-radius:6px;padding:8px;font-size:12px;resize:vertical;font-family:inherit" placeholder="Your notes..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div id="modal-footer">
+      <button class="btn btn-primary" onclick="window.print()">🖨 Print</button>
+      <button class="btn btn-secondary" id="btn-close-modal">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="algorithms.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
