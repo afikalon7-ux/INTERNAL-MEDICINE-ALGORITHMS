@@ -147,4 +147,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('modal-notes').addEventListener('input', e => {
     if (currentAlgoId) localStorage.setItem('notes-' + currentAlgoId, e.target.value);
   });
+
+  document.getElementById('sidebar-toggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+  });
+
+  document.getElementById('info-toggle').addEventListener('click', () => {
+    document.getElementById('info-panel').classList.toggle('collapsed');
+  });
 });
