@@ -149,10 +149,20 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('sidebar-toggle').addEventListener('click', () => {
-    document.getElementById('sidebar').classList.toggle('collapsed');
+    const s = document.getElementById('sidebar');
+    if (s.style.display === 'none') {
+      s.style.display = 'flex';
+    } else {
+      s.style.display = 'none';
+    }
   });
 
   document.getElementById('info-toggle').addEventListener('click', () => {
-    document.getElementById('info-panel').classList.toggle('collapsed');
+    const p = document.getElementById('info-panel');
+    if (p.style.display === 'none') {
+      p.style.display = 'flex';
+    } else {
+      p.style.display = 'none';
+    }
   });
 });
